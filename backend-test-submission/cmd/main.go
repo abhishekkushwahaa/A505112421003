@@ -9,15 +9,21 @@ import (
 
 func main() {
 	mux := http.NewServeMux()
+
+	// Register all handlers with the mux router
 	mux.HandleFunc("/shorturls", api.LoggingMiddleware(api.CreateShortUrl))
 	mux.HandleFunc("/shorturls/", api.LoggingMiddleware(api.GetUrl))
 	mux.HandleFunc("/", api.LoggingMiddleware(api.RedirectUrl))
 
+	// Chain the CORS middleware on top of the entire router
+	// This ensures all incoming requests are handled by CORS first
+	corsHandler := api.EnableCORS(mux)
+
 	server := &http.Server{
 		Addr:    ":8080",
-		Handler: mux,
+		Handler: corsHandler, // Use the wrapped handler
 	}
 
 	log.Println("Server started at http://localhost:8080")
-	server.ListenAndServe()
+	log.Fatal(server.ListenAndServe())
 }
